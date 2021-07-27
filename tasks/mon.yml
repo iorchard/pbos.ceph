@@ -121,8 +121,9 @@
   ansible.builtin.copy:
     content: "{{ monitor_keyring_str.content | b64decode }}"
     dest: "{{ ceph_monitor_keyring }}"
-  when: inventory_hostname != groups['ceph_mon'][0]
-  when: not is_mon.changed
+  when:
+    - inventory_hostname != groups['ceph_mon'][0]
+    - not is_mon.changed
 
 - name: MON | create monitor directory
   ansible.builtin.file:
