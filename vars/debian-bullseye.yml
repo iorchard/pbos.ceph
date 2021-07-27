@@ -1,0 +1,33 @@
+---
+prereq_pkgs:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+
+# ceph apt repo keyring
+ceph_keyring:
+  url: "https://download.ceph.com/keys/release.asc"
+  file: "/usr/share/keyrings/ceph-keyring.gpg"
+
+# ceph apt repo
+ceph_repos:
+  - repo: "deb [signed-by=/usr/share/keyrings/ceph-keyring.gpg] https://download.ceph.com/debian-{{ ceph_release }}/ buster main"
+    filename: "ceph"
+
+mon_pkgs:
+  - ceph-base
+  - ceph-common
+  - ceph-mon
+
+mgr_pkgs:
+  - ceph-mgr
+  - ceph-mgr-dashboard
+  - ceph-mgr-diskprediction-local
+
+osd_pkgs:
+  - ceph-osd
+
+rgw_pkgs:
+  - radosgw
+  - s3cmd
+...

@@ -1,0 +1,93 @@
+---
+- name: RGW | Install rgw packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    allow_unauthenticated: false
+  loop: "{{ rgw_pkgs }}"
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: RGW | template configuration
+  ansible.builtin.template:
+    dest: "{{ ceph_conf }}"
+    src: "{{ ansible_distribution | lower }}{{ ceph_conf + '.j2' }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0644"
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: RGW | copy keyrings from the monitor to rgw nodes
+  ansible.builtin.include_tasks: copy_keyrings.yml
+  loop:
+    - {path: "{{ ceph_client_admin_keyring }}", mode: "0600"}
+
+- name: RGW | create directory
+  ansible.builtin.file:
+    path: "{{ ceph_rgw_dir }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0755"
+    state: directory
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: RGW | create radosgw keyring
+  ansible.builtin.shell: >-
+    ceph auth get-or-create \
+      client.rgw.{{ inventory_hostname }} \
+      mon 'allow rw' \
+      osd 'allow rwx' \
+      -o {{ ceph_rgw_keyring }}
+  become: true
+  when: 
+    - inventory_hostname in groups['ceph_rgw']
+    - not is_rgw.changed
+
+- name: RGW | enable systemd service
+  ansible.builtin.service:
+    name: "ceph-radosgw@rgw.{{ inventory_hostname }}"
+    enabled: true
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: MGR | systemctl reset-failed
+  ansible.builtin.command: >-
+    systemctl reset-failed ceph-radosgw@rgw.{{ inventory_hostname }}
+  become: true
+
+- name: RGW | restart ceph-radosgw
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: "restarted"
+  become: true
+  loop:
+    - "ceph-radosgw.target"
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: RGW | create user and access/secret key
+  ansible.builtin.command: >-
+    radosgw-admin user create \
+      --uid="{{ ceph_rgw_uid }}" \
+      --display-name="rgw for cloudpc"
+  become: true
+  register: create_user
+  delegate_to: "{{ groups['ceph_rgw'][0] }}"
+  run_once: true
+
+- name: RGW | set fact for access key
+  ansible.builtin.set_fact:
+    ceph_rgw_access_key: "{{ create_user.stdout | from_json | community.general.json_query('keys[0].access_key') }}"
+
+- name: RGW | set fact for secret key
+  ansible.builtin.set_fact:
+    ceph_rgw_secret_key: "{{ create_user.stdout | from_json | community.general.json_query('keys[0].secret_key') }}"
+
+- name: RGW | template s3 config file
+  ansible.builtin.template:
+    src: "dots3cfg.j2"
+    dest: "{{ lookup('env', 'HOME') }}/.s3cfg"
+    mode: "0600"
+...

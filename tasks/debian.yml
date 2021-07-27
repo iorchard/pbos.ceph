@@ -1,0 +1,37 @@
+---
+- name: Debian | Install prerequisite packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    allow_unauthenticated: false
+  loop: "{{ prereq_pkgs }}"
+  become: true
+
+#- name: Debian | Install apt repo keyring
+#  ansible.builtin.apt_key:
+#    url: "{{ ceph_keyring.url }}"
+#    keyring: "{{ ceph_keyring.file }}"
+#    state: present
+#  become: true
+#
+#- name: Debian | Add apt repository
+#  ansible.builtin.apt_repository:
+#    repo: "{{ item.repo }}"
+#    state: present
+#    mode: "0644"
+#    filename: "{{ item.filename }}"
+#    update_cache: true
+#    validate_certs: true
+#  become: true
+#  loop: "{{ ceph_repos }}"
+#
+#- name: Debian | Install packages
+#  ansible.builtin.apt:
+#    name: "{{ item }}"
+#    state: present
+#    update_cache: true
+#    allow_unauthenticated: false
+#  become: true
+#  loop: "{{ packages }}"
+...

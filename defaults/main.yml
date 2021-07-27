@@ -1,0 +1,37 @@
+---
+ceph_release: "pacific"
+ceph_fsid: "{{ vault_ceph_fsid }}"
+ceph_public_network: ~
+ceph_public_network_iface: ~
+ceph_rgw_service_iface: ~
+ceph_cluster_network: ~
+ceph_osd_devices: ~
+ceph_mon_port: 6789
+ceph_rgw_uid: "cloudpc"
+ceph_rgw_port: 7480
+ceph_replicas: 3
+ceph_default_pg_num: 32
+ceph_mgr_pg_autoscaler: true
+ceph_conf_dir: "/etc/ceph"
+ceph_conf: "{{ ceph_conf_dir }}/ceph.conf"
+ceph_user: ceph
+ceph_group: ceph
+ceph_monitor_keyring: "/tmp/ceph.mon.keyring"
+ceph_client_admin_keyring: "{{ ceph_conf_dir }}/ceph.client.admin.keyring"
+ceph_data_dir: "/var/lib/ceph"
+ceph_monitor_dir: "{{ ceph_data_dir }}/mon/ceph-{{ inventory_hostname }}"
+ceph_client_bootstrap_osd_keyring: "{{ ceph_data_dir }}/bootstrap-osd/ceph.keyring"
+ceph_manager_dir: "{{ ceph_data_dir }}/mgr/ceph-{{ inventory_hostname }}"
+ceph_osd_dir: "{{ ceph_data_dir }}/osd"
+ceph_rgw_dir: "{{ ceph_data_dir }}/radosgw/{{ inventory_hostname }}"
+ceph_rgw_keyring: "{{ ceph_rgw_dir }}/keyring"
+ceph_openstack_pools:
+  - images
+  - volumes
+  - backups
+  - vms
+ceph_openstack_keyrings:
+  - {name: "glance", mon: "profile rbd", osd: "profile rbd pool=images", mgr: "profile rbd pool=images"}
+  - {name: "cinder", mon: "profile rbd", osd: "profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images", mgr: "profile rbd pool=volumes, profile rbd pool=vms"}
+  - {name: "cinder-backup", mon: "profile rbd", osd: "profile rbd pool=backups", mgr: "profile rbd pool=backups"}
+...

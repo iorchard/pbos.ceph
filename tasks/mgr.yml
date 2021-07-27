@@ -1,0 +1,83 @@
+---
+- name: MGR | Install manager packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    allow_unauthenticated: false
+  loop: "{{ mgr_pkgs }}"
+  become: true
+
+- name: MGR | template configuration
+  ansible.builtin.template:
+    dest: "{{ ceph_conf }}"
+    src: "{{ ansible_distribution | lower }}{{ ceph_conf + '.j2' }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0644"
+  become: true
+
+- name: MGR | create directory
+  ansible.builtin.file:
+    path: "{{ ceph_manager_dir }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: 0750
+    state: directory
+  become: true
+
+- name: MGR | create manager keyring
+  ansible.builtin.shell: >-
+    ceph auth get-or-create \
+      mgr.{{ inventory_hostname }} \
+      mon 'allow profile mgr' \
+      osd 'allow *' \
+      mds 'allow *' \
+      -o {{ ceph_manager_dir }}/keyring
+  become: true
+  when: not is_mgr.changed
+
+- name: MGR | chown manager keyring
+  ansible.builtin.file:
+    path: "{{ ceph_manager_dir }}/keyring"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0600"
+  become: true
+
+- name: MGR | enable systemd service
+  ansible.builtin.service:
+    name: "ceph-mgr@{{ inventory_hostname }}"
+    enabled: true
+  become: true
+
+- name: MGR | systemctl reset-failed
+  ansible.builtin.command: >-
+    systemctl reset-failed ceph-mgr@{{ inventory_hostname }}
+  become: true
+
+- name: MGR | restart ceph-mgr
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: "restarted"
+  loop:
+    - "ceph-mgr.target"
+  become: true
+
+- name: MGR | check service status
+  ansible.builtin.service:
+    name: "ceph-mgr@{{ inventory_hostname }}"
+    state: "started"
+  check_mode: true
+  register: mgr_status
+  retries: 5
+  until: mgr_status.status.ActiveState == "active"
+
+- name: MGR | enable pg_autoscaler
+  ansible.builtin.command: >-
+    ceph mgr module enable pg_autoscaler --force
+  become: true
+  delegate_to: "{{ groups['ceph_mgr'][0] }}"
+  run_once: true
+  when: ceph_mgr_pg_autoscaler
+...

@@ -1,0 +1,54 @@
+---
+- name: Stop | import common tasks
+  tags: ceph
+  ansible.builtin.import_tasks: "common.yml"
+
+- name: Stop | stop osd service
+  tags: ceph
+  ansible.builtin.service:
+    name: "ceph-osd.target"
+    state: "stopped"
+  become: true
+  register: stop_service
+  failed_when: stop_service.failed
+  when: inventory_hostname in groups['ceph_osd']
+
+- name: Stop | stop radosgw service
+  tags: ceph
+  ansible.builtin.service:
+    name: "ceph-radosgw.target"
+    state: "stopped"
+  become: true
+  register: stop_service
+  failed_when: stop_service.failed
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: Stop | stop manager service
+  tags: ceph
+  ansible.builtin.service:
+    name: "ceph-mgr.target"
+    state: "stopped"
+  become: true
+  register: stop_service
+  failed_when: stop_service.failed
+  when: inventory_hostname in groups['ceph_mgr']
+
+- name: Stop | stop monitor service
+  tags: ceph
+  when: inventory_hostname in groups['ceph_mon']
+  block:
+    - name: Stop | stop service
+      ansible.builtin.service:
+        name: "ceph-mon.target"
+        state: "stopped"
+      become: true
+      register: stop_service
+      failed_when: stop_service.failed
+    - name: Stop | wait until port is closed
+      ansible.builtin.wait_for:
+        host: "{{ hostvars[inventory_hostname]['ansible_' + ceph_public_network_iface].ipv4.address }}"
+        port: "{{ ceph_mon_port }}"
+        sleep: 2
+        timeout: 10
+        state: stopped
+...

@@ -1,0 +1,159 @@
+---
+- name: MON | Install monitor packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    allow_unauthenticated: false
+  loop: "{{ mon_pkgs }}"
+  become: true
+
+- name: MON | template configuration
+  ansible.builtin.template:
+    dest: "{{ ceph_conf }}"
+    src: "{{ ansible_distribution | lower }}{{ ceph_conf + '.j2' }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0644"
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+
+- name: MON | get ceph configuration from the first monitor
+  ansible.builtin.slurp:
+    src: "{{ ceph_conf }}"
+  register: ceph_conf_str
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+
+- name: MON | copy ceph configuration from the first monitor to other monitor
+  ansible.builtin.copy:
+    content: "{{ ceph_conf_str.content | b64decode }}"
+    dest: "{{ ceph_conf }}"
+  become: true
+  when: inventory_hostname != groups['ceph_mon'][0]
+
+- name: MON | create monitor keyring and monitor secret key
+  ansible.builtin.shell: >-
+    ceph-authtool \
+      --create-keyring {{ ceph_monitor_keyring }} \
+      --gen-key \
+      -n mon. \
+      --cap mon 'allow *' \
+      --mode 0644
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+  when: not is_mon.changed
+
+- name: MON | create client admin keyring, user, add user to keyring
+  ansible.builtin.shell: >-
+    ceph-authtool \
+      --create-keyring {{ ceph_client_admin_keyring }} \
+      --gen-key \
+      -n client.admin \
+      --cap mon 'allow *' \
+      --cap osd 'allow *' \
+      --cap mds 'allow *' \
+      --cap mgr 'allow *' 
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+  when: not is_mon.changed
+
+- name: MON | change ownership of client admin keyring
+  ansible.builtin.file:
+    path: "{{ ceph_client_admin_keyring }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+
+- name: MON | create boostrap-osd directory
+  ansible.builtin.file:
+    path: "{{ ceph_data_dir }}/bootstrap-osd"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0750"
+    state: directory
+  become: true
+
+- name: MON | create bootstrap-osd keyring, user, add user to keyring
+  ansible.builtin.shell: >-
+    ceph-authtool \
+      --create-keyring {{ ceph_client_bootstrap_osd_keyring }} \
+      --gen-key \
+      -n client.bootstrap-osd \
+      --cap mon 'profile bootstrap-osd' \
+      --cap mgr 'allow r'
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+  when: not is_mon.changed
+
+- name: MON | copy keyrings from the first monitor to other monitor
+  ansible.builtin.include_tasks: copy_keyrings.yml
+  loop:
+    - {path: "{{ ceph_client_admin_keyring }}", mode: "0600"}
+    - {path: "{{ ceph_client_bootstrap_osd_keyring }}", mode: "0400"}
+
+- name: MON | add client keyrings to monitor keyring
+  ansible.builtin.shell: >
+    ceph-authtool {{ ceph_monitor_keyring }} --import-keyring {{ item }}
+  loop:
+    - "{{ ceph_client_admin_keyring }}"
+    - "{{ ceph_client_bootstrap_osd_keyring }}"
+  become: true
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+  when: not is_mon.changed
+
+- name: MON | get monitor keyring content from the first monitor
+  ansible.builtin.slurp:
+    src: "{{ ceph_monitor_keyring }}"
+  register: monitor_keyring_str
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+  when: not is_mon.changed
+
+- name: MON | copy monitor keyring from the first monitor to other monitor
+  ansible.builtin.copy:
+    content: "{{ monitor_keyring_str.content | b64decode }}"
+    dest: "{{ ceph_monitor_keyring }}"
+  when: inventory_hostname != groups['ceph_mon'][0]
+  when: not is_mon.changed
+
+- name: MON | create monitor directory
+  ansible.builtin.file:
+    path: "{{ ceph_monitor_dir }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: 0750
+    state: directory
+  become: true
+
+- name: MON | populate monitor database
+  ansible.builtin.shell: >
+    ceph-mon \
+      --mkfs -i {{ inventory_hostname }} \
+      --setuser {{ ceph_user }} \
+      --setgroup {{ ceph_group }} \
+      --keyring {{ ceph_monitor_keyring }}
+  become: true
+  when: not is_mon.changed
+
+- name: MON | restart ceph-mon
+  ansible.builtin.service:
+    name: "ceph-mon.target"
+    state: "restarted"
+  become: true
+
+- name: MON | wait until port is open
+  ansible.builtin.wait_for:
+    host: "{{ hostvars[inventory_hostname]['ansible_' + ceph_public_network_iface].ipv4.address }}"
+    port: "{{ ceph_mon_port }}"
+    sleep: 2
+    timeout: 10
+    state: started
+...

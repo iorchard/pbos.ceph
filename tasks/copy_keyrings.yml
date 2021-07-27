@@ -1,0 +1,19 @@
+---
+- name: MON | get keyrings from the first monitor
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  become: true
+  register: ceph_keyring_str
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+
+- name: MON | copy keyrings from the first monitor to other monitor
+  ansible.builtin.copy:
+    content: "{{ ceph_keyring_str.content | b64decode }}"
+    dest: "{{ item.path }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "{{ item.mode }}"
+  become: true
+  when: inventory_hostname != groups['ceph_mon'][0]
+...

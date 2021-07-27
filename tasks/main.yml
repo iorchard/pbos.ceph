@@ -1,0 +1,76 @@
+---
+- name: Main | import common tasks
+  ansible.builtin.import_tasks: "common.yml"
+
+- name: Main | include os specific tasks
+  ansible.builtin.include_tasks: "{{ lookup('first_found', _params) }}"
+  vars:
+    _params:
+      files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_release | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths:
+        - "."
+
+- name: Main | check monitor is already setup
+  ansible.builtin.file:
+    path: "{{ ceph_monitor_dir }}"
+    state: absent
+  check_mode: true
+  register: is_mon
+  become: true
+  when: inventory_hostname in groups['ceph_mon']
+
+- name: Main | import monitor tasks
+  ansible.builtin.import_tasks: "mon.yml"
+  when: inventory_hostname in groups['ceph_mon']
+
+- name: Main | check manager is already setup
+  ansible.builtin.file:
+    path: "{{ ceph_manager_dir }}"
+    state: absent
+  check_mode: true
+  register: is_mgr
+  become: true
+  when: inventory_hostname in groups['ceph_mgr']
+
+- name: Main | import manager tasks
+  ansible.builtin.import_tasks: "mgr.yml"
+  when: inventory_hostname in groups['ceph_mgr']
+
+- name: Main | check osd is already setup
+  ansible.builtin.find:
+    paths: "{{ ceph_osd_dir }}"
+    file_type: directory
+    patterns: "ceph-*"
+  check_mode: true
+  register: is_osd
+  become: true
+  when: inventory_hostname in groups['ceph_osd']
+
+- name: Main | import osd tasks
+  ansible.builtin.import_tasks: "osd.yml"
+  when: inventory_hostname in groups['ceph_mon'][0] or inventory_hostname in groups['ceph_osd']
+
+- name: Main | check radosgw is already setup
+  ansible.builtin.file:
+    path: "{{ ceph_rgw_keyring }}"
+    state: absent
+  check_mode: true
+  register: is_rgw
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: Main | import rgw tasks
+  ansible.builtin.import_tasks: "rgw.yml"
+  when: inventory_hostname in groups['ceph_mon'][0] or inventory_hostname in groups['ceph_rgw']
+
+- name: Main | import openstack tasks
+  ansible.builtin.import_tasks: "openstack.yml"
+  delegate_to: "{{ groups['ceph_mon'][0] }}"
+  run_once: true
+...

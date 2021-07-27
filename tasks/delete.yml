@@ -1,0 +1,87 @@
+---
+- name: Delete | import common tasks
+  ansible.builtin.import_tasks: "common.yml"
+
+- name: Delete | import stop tasks
+  ansible.builtin.import_tasks: "stop.yml"
+
+- name: Delete | purge rgw packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ rgw_pkgs }}"
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: Delete | purge rgw directory
+  ansible.builtin.file:
+    path: "{{ ceph_rgw_dir }}"
+    state: absent
+  become: true
+  when: inventory_hostname in groups['ceph_rgw']
+
+- name: Delete | zap osd device completely
+  ansible.builtin.command: >-
+    ceph-volume lvm zap --destroy {{ item }}
+  become: true
+  loop: "{{ ceph_osd_devices }}"
+  when: inventory_hostname in groups['ceph_osd']
+
+- name: Delete | purge osd packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ osd_pkgs }}"
+  become: true
+  when: inventory_hostname in groups['ceph_osd']
+
+- name: Delete | purge osd directory
+  ansible.builtin.file:
+    path: "{{ ceph_osd_dir }}"
+    state: absent
+  become: true
+  when: inventory_hostname in groups['ceph_osd']
+
+- name: Delete | purge manager packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ mgr_pkgs }}"
+  become: true
+  when: inventory_hostname in groups['ceph_mgr']
+
+- name: Delete | purge manager directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  become: true
+  loop:
+    - "{{ ceph_manager_dir }}"
+  when: inventory_hostname in groups['ceph_mgr']
+
+- name: Delete | purge monitor packages
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ mon_pkgs }}"
+  become: true
+  when: inventory_hostname in groups['ceph_mon']
+
+- name: Delete | purge monitor directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  become: true
+  loop:
+    - "{{ ceph_conf }}"
+    - "{{ ceph_client_admin_keyring }}"
+    - "{{ ceph_monitor_dir }}"
+    - "{{ ceph_client_bootstrap_osd_keyring }}"
+  when: inventory_hostname in groups['ceph_mon']
+
+- name: Delete | delete ceph data directory
+  ansible.builtin.file:
+    path: "{{ ceph_data_dir }}"
+    state: absent
+  become: true
+...

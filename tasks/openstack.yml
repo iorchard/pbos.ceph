@@ -1,0 +1,22 @@
+---
+- name: OpenStack | create pools
+  ansible.builtin.command: >-
+    ceph osd pool create {{ item }} {{ ceph_default_pg_num }}
+  loop: "{{ ceph_openstack_pools }}"
+  become: true
+  
+- name: OpenStack | initialize pools
+  ansible.builtin.command: >-
+    rbd pool init {{ item }}
+  loop: "{{ ceph_openstack_pools }}"
+  become: true
+
+- name: OpenStack | create keyrings
+  ansible.builtin.command: >-
+    ceph auth get-or-create client.{{ item.name }} \
+      mon '{{ item.mon }}' \
+      osd '{{ item.osd }}' \
+      mgr '{{ item.mgr }}'
+  loop: "{{ ceph_openstack_keyrings }}"
+  become: true
+...
