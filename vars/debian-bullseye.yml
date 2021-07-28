@@ -3,6 +3,7 @@ prereq_pkgs:
   - apt-transport-https
   - ca-certificates
   - curl
+  - gpg
 
 # ceph apt repo keyring
 ceph_keyring:
