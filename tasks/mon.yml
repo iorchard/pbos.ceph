@@ -144,6 +144,17 @@
   become: true
   when: not is_mon.changed
 
+- name: MON | enable systemd service
+  ansible.builtin.service:
+    name: "ceph-mon@{{ inventory_hostname }}"
+    enabled: true
+  become: true
+
+- name: MON | systemctl reset-failed
+  ansible.builtin.command: >-
+    systemctl reset-failed ceph-mon@{{ inventory_hostname }}
+  become: true
+
 - name: MON | restart ceph-mon
   ansible.builtin.service:
     name: "ceph-mon.target"
