@@ -17,8 +17,6 @@
     group: "{{ ceph_group }}"
     mode: "0644"
   become: true
-  delegate_to: "{{ groups['ceph_osd'][0] }}"
-  run_once: true
   when: inventory_hostname in groups['ceph_osd']
 
 - name: OSD | create boostrap-osd directory
