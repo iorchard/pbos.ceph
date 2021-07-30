@@ -7,6 +7,10 @@
     allow_unauthenticated: false
   loop: "{{ prereq_pkgs }}"
   become: true
+  register: _apt
+  until: not _apt.failed
+  retries: 3
+  delay: 3
 
 #- name: Debian | Install apt repo keyring
 #  ansible.builtin.apt_key:

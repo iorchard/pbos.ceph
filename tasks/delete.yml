@@ -1,14 +1,20 @@
 ---
 - name: Delete | import common tasks
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.import_tasks: "common.yml"
 
 - name: Delete | import stop tasks
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.import_tasks: "stop.yml"
 
 - name: Delete | purge rgw packages
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
@@ -17,7 +23,9 @@
   when: inventory_hostname in groups['ceph_rgw']
 
 - name: Delete | purge rgw directory
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.file:
     path: "{{ ceph_rgw_dir }}"
     state: absent
@@ -25,15 +33,29 @@
   when: inventory_hostname in groups['ceph_rgw']
 
 - name: Delete | zap osd device completely
-  tags: ceph
-  ansible.builtin.command: >-
-    ceph-volume lvm zap --destroy {{ item }}
+  tags:
+    - ceph
+    - pbos-storage
+  ansible.builtin.shell: >-
+    if command -v ceph-volume; then
+      ceph-volume lvm zap --destroy {{ item }};
+    fi
   become: true
   loop: "{{ ceph_osd_devices }}"
   when: inventory_hostname in groups['ceph_osd']
 
+- name: Delete | unmount ceph tmp volumes
+  ansible.builtin.shell: >-
+    if grep ceph /proc/mounts; then 
+      grep ceph /proc/mounts | cut -d' ' -f2 | xargs umount; 
+    fi
+  become: true
+  when: inventory_hostname in groups['ceph_osd']
+
 - name: Delete | purge osd packages
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
@@ -42,7 +64,9 @@
   when: inventory_hostname in groups['ceph_osd']
 
 - name: Delete | purge osd directory
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.file:
     path: "{{ ceph_osd_dir }}"
     state: absent
@@ -50,7 +74,9 @@
   when: inventory_hostname in groups['ceph_osd']
 
 - name: Delete | purge manager packages
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
@@ -59,7 +85,9 @@
   when: inventory_hostname in groups['ceph_mgr']
 
 - name: Delete | purge manager directory
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
@@ -69,7 +97,9 @@
   when: inventory_hostname in groups['ceph_mgr']
 
 - name: Delete | purge monitor packages
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.apt:
     name: "{{ item }}"
     state: absent
@@ -78,7 +108,9 @@
   when: inventory_hostname in groups['ceph_mon']
 
 - name: Delete | purge monitor directory
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
@@ -91,7 +123,9 @@
   when: inventory_hostname in groups['ceph_mon']
 
 - name: Delete | delete ceph data directory
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.file:
     path: "{{ ceph_data_dir }}"
     state: absent

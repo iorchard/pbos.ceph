@@ -2,11 +2,15 @@
 - name: MON | Install monitor packages
   ansible.builtin.apt:
     name: "{{ item }}"
-    state: present
+    state: "{{ apt_state }}"
     update_cache: true
     allow_unauthenticated: false
   loop: "{{ mon_pkgs }}"
   become: true
+  register: _apt
+  until: not _apt.failed
+  retries: 3
+  delay: 3
 
 - name: MON | template configuration
   ansible.builtin.template:
@@ -159,7 +163,12 @@
   ansible.builtin.service:
     name: "ceph-mon.target"
     state: "restarted"
+  register: _restart_service
+  until: _restart_service.state == "started"
+  retries: 3
+  delay: 3
   become: true
+  
 
 - name: MON | wait until port is open
   ansible.builtin.wait_for:

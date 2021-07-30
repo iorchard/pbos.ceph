@@ -62,6 +62,10 @@
   ansible.builtin.service:
     name: "{{ item }}"
     state: "restarted"
+  register: _restart_service
+  until: _restart_service.state == "started"
+  retries: 3
+  delay: 3
   become: true
   loop:
     - "ceph-radosgw.target"

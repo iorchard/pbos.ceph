@@ -2,9 +2,13 @@
 - name: OSD | Install osd packages
   ansible.builtin.apt:
     name: "{{ item }}"
-    state: present
+    state: "{{ apt_state }}"
     update_cache: true
     allow_unauthenticated: false
+  register: _apt
+  until: not _apt.failed
+  retries: 3
+  delay: 3
   loop: "{{ osd_pkgs }}"
   become: true
   when: inventory_hostname in groups['ceph_osd']

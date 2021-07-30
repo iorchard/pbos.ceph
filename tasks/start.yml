@@ -1,19 +1,25 @@
 ---
 - name: Start | import common tasks
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.import_tasks: "common.yml"
 
 - name: Start | start monitor service
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   when: inventory_hostname in groups['ceph_mon']
   block:
     - name: Start | start service
       ansible.builtin.service:
         name: "ceph-mon.target"
         state: "started"
+      register: _service
+      until: _service.state == "started"
+      retries: 3
+      delay: 3
       become: true
-      register: start_service
-      failed_when: start_service.failed
     - name: Start | wait until port is opened
       ansible.builtin.wait_for:
         host: "{{ hostvars[inventory_hostname]['ansible_' + ceph_public_network_iface].ipv4.address }}"
@@ -23,22 +29,30 @@
         state: started
 
 - name: Start | start manager service
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.service:
     name: "ceph-mgr.target"
     state: "started"
+  register: _service
+  until: _service.state == "started"
+  retries: 3
+  delay: 3
   become: true
-  register: start_service
-  failed_when: start_service.failed
   when: inventory_hostname in groups['ceph_mgr']
 
 - name: Start | start osd service
-  tags: ceph
+  tags:
+    - ceph
+    - pbos-storage
   ansible.builtin.service:
     name: "ceph-osd.target"
     state: "started"
+  register: _service
+  until: _service.state == "started"
+  retries: 3
+  delay: 3
   become: true
-  register: start_service
-  failed_when: start_service.failed
   when: inventory_hostname in groups['ceph_osd']
 ...
