@@ -1,0 +1,41 @@
+---
+- name: Ubuntu | Install prerequisite packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+    allow_unauthenticated: false
+  loop: "{{ prereq_pkgs }}"
+  become: true
+  register: _apt
+  until: not _apt.failed
+  retries: 3
+  delay: 3
+
+- name: Ubuntu | Install apt repo keyring
+  ansible.builtin.apt_key:
+    url: "{{ ceph_keyring.url }}"
+    keyring: "{{ ceph_keyring.file }}"
+    state: present
+  become: true
+
+- name: Ubuntu | Add apt repository
+  ansible.builtin.apt_repository:
+    repo: "{{ item.repo }}"
+    state: present
+    mode: "0644"
+    filename: "{{ item.filename }}"
+    update_cache: true
+    validate_certs: true
+  become: true
+  loop: "{{ ceph_repos }}"
+
+#- name: Ubuntu | Install packages
+#  ansible.builtin.apt:
+#    name: "{{ item }}"
+#    state: present
+#    update_cache: true
+#    allow_unauthenticated: false
+#  become: true
+#  loop: "{{ packages }}"
+...

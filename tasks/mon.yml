@@ -15,7 +15,7 @@
 - name: MON | template configuration
   ansible.builtin.template:
     dest: "{{ ceph_conf }}"
-    src: "{{ ansible_distribution | lower }}{{ ceph_conf + '.j2' }}"
+    src: "{{ ansible_os_family | lower }}{{ ceph_conf + '.j2' }}"
     owner: "{{ ceph_user }}"
     group: "{{ ceph_group }}"
     mode: "0644"
