@@ -11,7 +11,7 @@
     - pbos-storage
   ansible.builtin.import_tasks: "stop.yml"
 
-- name: Delete | purge rgw packages
+- name: Delete | remove rgw packages
   tags:
     - ceph
     - pbos-storage
@@ -22,7 +22,7 @@
   become: true
   when: inventory_hostname in groups['ceph_rgw']
 
-- name: Delete | purge rgw directory
+- name: Delete | remove rgw directory
   tags:
     - ceph
     - pbos-storage
@@ -52,7 +52,7 @@
   become: true
   when: inventory_hostname in groups['ceph_osd']
 
-- name: Delete | purge osd packages
+- name: Delete | remove osd packages
   tags:
     - ceph
     - pbos-storage
@@ -63,7 +63,7 @@
   become: true
   when: inventory_hostname in groups['ceph_osd']
 
-- name: Delete | purge osd directory
+- name: Delete | remove osd directory
   tags:
     - ceph
     - pbos-storage
@@ -73,7 +73,7 @@
   become: true
   when: inventory_hostname in groups['ceph_osd']
 
-- name: Delete | purge manager packages
+- name: Delete | remove manager packages
   tags:
     - ceph
     - pbos-storage
@@ -84,7 +84,7 @@
   become: true
   when: inventory_hostname in groups['ceph_mgr']
 
-- name: Delete | purge manager directory
+- name: Delete | remove manager directory
   tags:
     - ceph
     - pbos-storage
@@ -96,7 +96,7 @@
     - "{{ ceph_manager_dir }}"
   when: inventory_hostname in groups['ceph_mgr']
 
-- name: Delete | purge monitor packages
+- name: Delete | remove monitor packages
   tags:
     - ceph
     - pbos-storage
@@ -107,7 +107,7 @@
   become: true
   when: inventory_hostname in groups['ceph_mon']
 
-- name: Delete | purge monitor directory
+- name: Delete | remove monitor directory
   tags:
     - ceph
     - pbos-storage
@@ -122,7 +122,7 @@
     - "{{ ceph_client_bootstrap_osd_keyring }}"
   when: inventory_hostname in groups['ceph_mon']
 
-- name: Delete | delete ceph data directory
+- name: Delete | remove ceph data directory
   tags:
     - ceph
     - pbos-storage
