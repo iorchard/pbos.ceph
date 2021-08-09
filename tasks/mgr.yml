@@ -1,12 +1,14 @@
 ---
+- name: MGR | Install python3 packages
+  ansible.builtin.command: "{{ pip_cmd }} install {{ mgr_python3_pkgs }}"
+  become: true
+
 - name: MGR | Install manager packages
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: "{{ item }}"
-    state: "{{ apt_state }}"
-    update_cache: true
-    allow_unauthenticated: false
-  register: _apt
-  until: not _apt.failed
+    state: "{{ pkg_state }}"
+  register: _pkg
+  until: not _pkg.failed
   retries: 3
   delay: 3
   loop: "{{ mgr_pkgs }}"
@@ -31,7 +33,7 @@
   become: true
 
 - name: MGR | create manager keyring
-  ansible.builtin.shell: >-
+  ansible.builtin.command: >-
     ceph auth get-or-create \
       mgr.{{ inventory_hostname }} \
       mon 'allow profile mgr' \
@@ -71,7 +73,6 @@
   loop:
     - "ceph-mgr.target"
   become: true
-
 
 - name: MGR | check service status
   ansible.builtin.service:

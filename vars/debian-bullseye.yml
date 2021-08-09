@@ -1,5 +1,8 @@
 ---
-apt_state: "latest"
+# not used but for the record.
+ceph_release: "nautilus"
+
+pkg_state: "latest"
 prereq_pkgs:
   - apt-transport-https
   - ca-certificates

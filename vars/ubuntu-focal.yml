@@ -1,5 +1,6 @@
 ---
-apt_state: "latest"
+ceph_release: "pacific"
+pkg_state: "latest"
 prereq_pkgs:
   - ca-certificates
   - curl

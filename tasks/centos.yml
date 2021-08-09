@@ -1,0 +1,26 @@
+---
+- name: CentOS | Install prerequisite packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "{{ pkg_state }}"
+  loop: "{{ prereq_pkgs }}"
+  become: true
+  register: _pkg
+  until: not _pkg.failed
+  retries: 3
+  delay: 3
+
+- name: CentOS | Install repo keyring
+  ansible.builtin.command: rpm --import "{{ ceph_keyring.url }}"
+  become: true
+
+- name: CentOS | Add repository
+  ansible.builtin.template:
+    dest: "{{ item.dest }}"
+    src: "{{ ansible_os_family | lower }}{{ item.dest + '.j2' }}"
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: true
+  loop: "{{ ceph_repos }}"
+...

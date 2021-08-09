@@ -1,0 +1,22 @@
+[global]
+fsid = {{ ceph_fsid }}
+public_network = {{ ceph_public_network }}
+cluster_network = {{ ceph_cluster_network }}
+mon_host = {% for s in groups['ceph_mon'] %}{{ hostvars[s]['ansible_' + ceph_public_network_iface].ipv4.address }}{% if not loop.last %},{% endif %}{% endfor %}
+
+mon_initial_members = {{ groups['ceph_mon'] | join(',') }}
+mon_allow_pool_delete = true
+auth_allow_insecure_global_id_reclaim = false
+osd_pool_default_size = {{ ceph_replicas }}
+osd_pool_default_min_size = {{ ceph_replicas - 1 }}
+osd_pool_default_pg_autoscale_mode = on
+
+{% if inventory_hostname in groups.get('ceph_rgw', []) %}
+{% for rgw_hostname in groups['ceph_rgw'] %}
+[client.rgw.{{ rgw_hostname }}]
+host = {{ rgw_hostname }}
+keyring = /var/lib/ceph/radosgw/{{ rgw_hostname }}/keyring
+log_file = /var/log/ceph/ceph-rgw-{{ rgw_hostname }}.log
+rgw_frontends = civetweb port={{ hostvars[rgw_hostname]['ansible_' + ceph_rgw_service_iface].ipv4.address }}:{{ ceph_rgw_port }}
+{% endfor %}
+{% endif %}

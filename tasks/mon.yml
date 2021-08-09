@@ -1,14 +1,12 @@
 ---
 - name: MON | Install monitor packages
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: "{{ item }}"
-    state: "{{ apt_state }}"
-    update_cache: true
-    allow_unauthenticated: false
+    state: "{{ pkg_state }}"
   loop: "{{ mon_pkgs }}"
   become: true
-  register: _apt
-  until: not _apt.failed
+  register: _pkg
+  until: not _pkg.failed
   retries: 3
   delay: 3
 
@@ -169,7 +167,6 @@
   delay: 3
   become: true
   
-
 - name: MON | wait until port is open
   ansible.builtin.wait_for:
     host: "{{ hostvars[inventory_hostname]['ansible_' + ceph_public_network_iface].ipv4.address }}"

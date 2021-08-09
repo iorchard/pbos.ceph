@@ -1,10 +1,8 @@
 ---
 - name: RGW | Install rgw packages
-  ansible.builtin.apt:
+  ansible.builtin.package:
     name: "{{ item }}"
-    state: present
-    update_cache: true
-    allow_unauthenticated: false
+    state: "{{ pkg_state }}"
   loop: "{{ rgw_pkgs }}"
   become: true
   when: inventory_hostname in groups['ceph_rgw']
@@ -102,6 +100,6 @@
 - name: RGW | template s3 config file
   ansible.builtin.template:
     src: "dots3cfg.j2"
-    dest: "{{ lookup('env', 'HOME') }}/.s3cfg"
+    dest: "{{ ansible_env.HOME }}/.s3cfg"
     mode: "0600"
 ...
