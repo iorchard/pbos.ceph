@@ -1,0 +1,34 @@
+---
+ceph_release: "pacific"
+os_distro: "el8"
+pkg_state: "latest"
+prereq_pkgs:
+  - ca-certificates
+  - curl
+  - gpg
+  - epel-release
+
+# ceph apt repo keyring
+ceph_keyring:
+  url: "https://download.ceph.com/keys/release.asc"
+
+ceph_repos:
+  - {dest: "/etc/yum.repos.d/ceph.repo"}
+
+mon_pkgs:
+  - ceph-base
+  - ceph-common
+  - ceph-mon
+
+mgr_pkgs:
+  - ceph-mgr
+  - ceph-mgr-dashboard
+  - ceph-mgr-diskprediction-local
+
+osd_pkgs:
+  - ceph-osd
+
+rgw_pkgs:
+  - ceph-radosgw
+  - s3cmd
+...

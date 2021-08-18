@@ -1,8 +1,4 @@
 ---
-- name: MGR | Install python3 packages
-  ansible.builtin.command: "{{ pip_cmd }} install {{ mgr_python3_pkgs }}"
-  become: true
-
 - name: MGR | Install manager packages
   ansible.builtin.package:
     name: "{{ item }}"
