@@ -6,7 +6,7 @@ ceph_public_network_iface: ~
 ceph_rgw_service_iface: ~
 ceph_cluster_network: ~
 ceph_osd_devices: ~
-ceph_mon_port: 6789
+ceph_mon_port: 3300
 ceph_rgw_uid: "cloudpc"
 ceph_rgw_port: 7480
 ceph_replicas: 3
