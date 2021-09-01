@@ -45,6 +45,6 @@
   become: true
   loop: "{{ ceph_osd_devices }}"
   when: 
-    - inventory_hostname != groups['ceph_mon'][0]
+    - inventory_hostname in groups['ceph_osd']
     - is_osd.matched == 0
 ...
