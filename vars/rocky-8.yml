@@ -6,7 +6,7 @@ prereq_pkgs:
   - ca-certificates
   - curl
   - gpg
-  - epel-release
+#  - epel-release
 
 # ceph apt repo keyring
 ceph_keyring:
@@ -23,7 +23,7 @@ mon_pkgs:
 mgr_pkgs:
   - ceph-mgr
   - ceph-mgr-dashboard
-  - ceph-mgr-diskprediction-local
+#  - ceph-mgr-diskprediction-local
 
 osd_pkgs:
   - ceph-osd

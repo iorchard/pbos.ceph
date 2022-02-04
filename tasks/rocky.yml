@@ -13,6 +13,7 @@
 - name: Rocky Linux | Install repo keyring
   ansible.builtin.command: rpm --import "{{ ceph_keyring.url }}"
   become: true
+  when: not offline
 
 - name: Rocky Linux | Add repository
   ansible.builtin.template:
@@ -23,4 +24,5 @@
     mode: "0644"
   become: true
   loop: "{{ ceph_repos }}"
+  when: not offline
 ...
