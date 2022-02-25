@@ -6,7 +6,6 @@ prereq_pkgs:
   - ca-certificates
   - curl
   - gpg
-#  - epel-release
 
 # ceph apt repo keyring
 ceph_keyring:
