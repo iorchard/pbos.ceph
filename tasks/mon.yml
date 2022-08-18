@@ -157,7 +157,7 @@
     systemctl reset-failed ceph-mon@{{ inventory_hostname }}
   become: true
 
-- name: MON | restart ceph-mon
+- name: MON | restart monitor service
   ansible.builtin.service:
     name: "ceph-mon.target"
     state: "restarted"
