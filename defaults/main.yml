@@ -1,7 +1,7 @@
 ---
 offline: false
 # ceph specific variables
-ceph_release: "pacific"
+ceph_release: "quincy"
 ceph_fsid: "{{ vault_ceph_fsid }}"
 ceph_public_network: ~
 ceph_public_network_iface: ~
