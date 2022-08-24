@@ -1,5 +1,4 @@
 ---
-ceph_release: "pacific"
 os_distro: "el8"
 pkg_state: "latest"
 prereq_pkgs:
