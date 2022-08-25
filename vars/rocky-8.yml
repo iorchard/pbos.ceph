@@ -21,10 +21,10 @@ mon_pkgs:
 mgr_pkgs:
   - ceph-mgr
   - ceph-mgr-dashboard
-#  - ceph-mgr-diskprediction-local
 
 osd_pkgs:
   - ceph-osd
+  - ceph-volume
 
 rgw_pkgs:
   - ceph-radosgw
