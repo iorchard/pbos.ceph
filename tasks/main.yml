@@ -25,8 +25,9 @@
   become: true
   when: inventory_hostname in groups['ceph_mon']
 
-- name: Main | import monitor tasks
-  ansible.builtin.import_tasks: "mon.yml"
+- name: Main | include monitor tasks
+  block:
+    - ansible.builtin.include_tasks: "mon.yml"
   when: inventory_hostname in groups['ceph_mon']
 
 - name: Main | check manager is already setup
@@ -38,8 +39,9 @@
   become: true
   when: inventory_hostname in groups['ceph_mgr']
 
-- name: Main | import manager tasks
-  ansible.builtin.import_tasks: "mgr.yml"
+- name: Main | include manager tasks
+  block:
+    - ansible.builtin.include_tasks: "mgr.yml"
   when: inventory_hostname in groups['ceph_mgr']
 
 - name: Main | check osd is already setup
@@ -52,8 +54,9 @@
   become: true
   when: inventory_hostname in groups['ceph_osd']
 
-- name: Main | import osd tasks
-  ansible.builtin.import_tasks: "osd.yml"
+- name: Main | include osd tasks
+  block:
+    - ansible.builtin.include_tasks: "osd.yml"
   when: inventory_hostname in groups['ceph_mon'][0] or inventory_hostname in groups['ceph_osd']
 
 - name: Main | check radosgw is already setup
@@ -65,8 +68,9 @@
   become: true
   when: inventory_hostname in groups['ceph_rgw']
 
-- name: Main | import rgw tasks
-  ansible.builtin.import_tasks: "rgw.yml"
+- name: Main | include rgw tasks
+  block:
+    - ansible.builtin.include_tasks: "rgw.yml"
   when: inventory_hostname in groups['ceph_mon'][0] or inventory_hostname in groups['ceph_rgw']
 
 - name: Main | import openstack tasks
