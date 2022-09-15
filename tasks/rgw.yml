@@ -55,6 +55,7 @@
   ansible.builtin.command: >-
     systemctl reset-failed ceph-radosgw@rgw.{{ inventory_hostname }}
   become: true
+  when: inventory_hostname in groups['ceph_rgw']
 
 - name: RGW | restart ceph-radosgw
   ansible.builtin.service:
@@ -102,4 +103,5 @@
     src: "dots3cfg.j2"
     dest: "{{ ansible_env.HOME }}/.s3cfg"
     mode: "0600"
+  when: inventory_hostname in groups['ceph_rgw']
 ...
