@@ -25,4 +25,15 @@
   become: true
   loop: "{{ ceph_repos }}"
   when: not offline
+
+- name: Rocky Linux | Install ceph common packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "{{ pkg_state }}"
+  loop: "{{ pkgs }}"
+  become: true
+  register: _pkg
+  until: not _pkg.failed
+  retries: 3
+  delay: 3
 ...
