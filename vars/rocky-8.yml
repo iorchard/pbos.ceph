@@ -13,9 +13,11 @@ ceph_keyring:
 ceph_repos:
   - {dest: "/etc/yum.repos.d/ceph.repo"}
 
-mon_pkgs:
+pkgs:
   - ceph-base
   - ceph-common
+
+mon_pkgs:
   - ceph-mon
 
 mgr_pkgs:
