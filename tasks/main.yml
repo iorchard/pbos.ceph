@@ -77,4 +77,14 @@
   ansible.builtin.import_tasks: "openstack.yml"
   delegate_to: "{{ groups['ceph_mon'][0] }}"
   run_once: true
+
+- name: Main | template ceph configuration on ceph client
+  ansible.builtin.template:
+    dest: "{{ ceph_conf }}"
+    src: "{{ ansible_os_family | lower }}{{ ceph_conf + '.j2' }}"
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode: "0644"
+  become: true
+  when: inventory_hostname in groups['ceph_client']
 ...
