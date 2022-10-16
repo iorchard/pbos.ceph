@@ -80,11 +80,41 @@
   retries: 5
   delay: 3
 
-- name: MGR | enable pg_autoscaler
+- name: MGR | enable pg_autoscaler module
   ansible.builtin.command: >-
     ceph mgr module enable pg_autoscaler --force
   become: true
   delegate_to: "{{ groups['ceph_mgr'][0] }}"
   run_once: true
   when: ceph_mgr_pg_autoscaler
+
+- name: MGR | enable prometheus module
+  ansible.builtin.command: >-
+    ceph mgr module enable prometheus --force
+  become: true
+  delegate_to: "{{ groups['ceph_mgr'][0] }}"
+  run_once: true
+  when: ceph_mgr_prometheus
+
+- name: MGR | configure prometheus module
+  ansible.builtin.command: >-
+    ceph config set mgr {{ item.key }} {{ item.value }}
+  become: true
+  delegate_to: "{{ groups['ceph_mgr'][0] }}"
+  run_once: true
+  loop: "{{ ceph_mgr_prometheus_config }}"
+  when: ceph_mgr_prometheus
+
+- name: MGR | restart ceph-mgr to apply prometheus config changes
+  ansible.builtin.service:
+    name: "{{ item }}"
+    state: "restarted"
+  register: _restart_service
+  until: _restart_service.state == "started"
+  retries: 3
+  delay: 3
+  loop:
+    - "ceph-mgr.target"
+  become: true
+  when: ceph_mgr_prometheus
 ...

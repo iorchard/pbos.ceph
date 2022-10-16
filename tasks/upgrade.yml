@@ -1,0 +1,39 @@
+---
+- name: Upgrade | import common tasks
+  ansible.builtin.import_tasks: "common.yml"
+
+- name: Upgrade | include os specific tasks
+  ansible.builtin.include_tasks: "{{ lookup('first_found', _params) }}"
+  vars:
+    _params:
+      files:
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_release | lower }}.yml"
+        - "{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version | lower }}.yml"
+        - "{{ ansible_distribution | lower }}.yml"
+        - "{{ ansible_os_family | lower }}.yml"
+      paths:
+        - "."
+
+- name: Upgrade | Install monitor packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: "{{ pkg_state }}"
+  loop: "{{ mon_pkgs }}"
+  become: true
+  register: _pkg
+  until: not _pkg.failed
+  retries: 3
+  delay: 3
+
+- name: Upgrade | restart monitor service
+  ansible.builtin.service:
+    name: "ceph-mon.target"
+    state: "restarted"
+  register: _restart_service
+  until: _restart_service.state == "started"
+  retries: 3
+  delay: 3
+  become: true
+...

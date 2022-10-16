@@ -14,6 +14,10 @@ ceph_rgw_port: 7480
 ceph_replicas: 3
 ceph_default_pg_num: 32
 ceph_mgr_pg_autoscaler: true
+ceph_mgr_prometheus: false
+ceph_mgr_prometheus_config:
+    - {"key": "mgr/prometheus/standby_behaviour", "value": "error"}
+    - {"key": "mgr/prometheus/standby_error_status_code", "value": 503}
 ceph_conf_dir: "/etc/ceph"
 ceph_conf: "{{ ceph_conf_dir }}/ceph.conf"
 ceph_user: ceph
