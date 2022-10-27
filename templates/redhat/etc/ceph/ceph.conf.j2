@@ -17,6 +17,6 @@ osd_pool_default_pg_autoscale_mode = on
 host = {{ rgw_hostname }}
 keyring = /var/lib/ceph/radosgw/{{ rgw_hostname }}/keyring
 log_file = /var/log/ceph/ceph-rgw-{{ rgw_hostname }}.log
-rgw_frontends = civetweb port={{ hostvars[rgw_hostname]['ansible_' + ceph_rgw_service_iface].ipv4.address }}:{{ ceph_rgw_port }}
+rgw_frontends = civetweb port={{ hostvars[rgw_hostname].ansible_host }}:{{ ceph_rgw_port }}
 {% endfor %}
 {% endif %}
